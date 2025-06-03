@@ -4,39 +4,40 @@ const dotenv = require('dotenv');
 const path = require('path');
 dotenv.config();
 
+const { dbConnection } = require('./config/db');
+const authMiddleware = require('./middlewares/authMiddleware');
+
+const authRoutes = require('./routes/authRoutes');
+const productRoutes = require('./routes/productRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+const productController = require('./controllers/productController');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares globales
+dbConnection();
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Sesión
 app.use(session({
   secret: process.env.SESSION_SECRET || 'supersecret',
   resave: false,
   saveUninitialized: false,
 }));
 
-// Archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Middlewares personalizados
-const authMiddleware = require('./middlewares/authMiddleware');
-
-// Rutas
-const authRoutes = require('./routes/authRoutes');
-const productRoutes = require('./routes/productRoutes');
-const dashboardRoutes = require('./routes/dashboardRoutes'); // ← nuevo archivo que debes crear
+// Ruta principal con productos en HTML
+app.get('/', productController.showProducts);
 
 // Rutas públicas
 app.use(authRoutes);
 app.use('/products', productRoutes);
 
-// Rutas protegidas (requieren sesión)
+// Rutas protegidas
 app.use('/dashboard', authMiddleware, dashboardRoutes);
 
-// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

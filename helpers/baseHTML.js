@@ -1,10 +1,12 @@
-module.exports = `
+const baseHtml = `
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Tienda de Ropa</title>
-  <style>body { font-family: sans-serif; }</style>
+  <meta charset="UTF-8">
+  <title>Mi Tienda</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 `;
+
+module.exports = baseHtml;

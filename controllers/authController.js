@@ -1,40 +1,40 @@
-// controllers/authController.js
-require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
+const baseHtml = require('../helpers/baseHtml');
+const getNavBar = require('../helpers/getNavBar');
 
-// Mostrar el formulario de login
+const USERNAME = process.env.AUTH_USERNAME;
+const PASSWORD = process.env.AUTH_PASSWORD;
+
 exports.showLoginForm = (req, res) => {
-  const error = req.query.error || '';
-  const html = `
-    <h1>Login administrador</h1>
-    ${error ? `<p style="color:red;">${error}</p>` : ''}
+  const isDashboard = false; // No es dashboard
+  const html = baseHtml +
+    getNavBar(isDashboard, req.session.user) +
+    `
+    <h1>Iniciar sesión</h1>
     <form method="POST" action="/login">
-      <label>Usuario: <input type="text" name="username" /></label><br/>
-      <label>Contraseña: <input type="password" name="password" /></label><br/>
-      <button type="submit">Entrar</button>
+      <input name="username" placeholder="Usuario" required />
+      <input name="password" placeholder="Contraseña" type="password" required />
+      <button>Entrar</button>
     </form>
+    </body></html>
   `;
   res.send(html);
 };
 
-// Procesar el login
 exports.login = (req, res) => {
   const { username, password } = req.body;
-
-  const adminUser = process.env.ADMIN_USER;
-  const adminPass = process.env.ADMIN_PASS;
-
-  if (username === adminUser && password === adminPass) {
-    // Almacena un usuario en la sesión (clave usada por el middleware)
+  if (username === USERNAME && password === PASSWORD) {
     req.session.user = { username };
-    res.redirect('/dashboard');
-  } else {
-    res.redirect('/login?error=Credenciales+incorrectas');
+    console.log('Sesión iniciada para:', username);
+    return res.redirect('/dashboard');
   }
+
+  res.send('<p>Credenciales inválidas. <a href="/login">Intenta de nuevo</a></p>');
 };
 
-// Logout (destruye la sesión)
 exports.logout = (req, res) => {
   req.session.destroy(() => {
-    res.redirect('/login');
+    res.redirect('/');
   });
 };

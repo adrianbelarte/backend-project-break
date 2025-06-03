@@ -28,7 +28,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // Rutas simuladas del dashboard
-// Rutas simuladas del dashboard
 app.get('/dashboard', productController.showProducts);
 app.get('/dashboard/new', productController.showNewProduct);   
 app.get('/dashboard/:id', productController.showProductById);  
