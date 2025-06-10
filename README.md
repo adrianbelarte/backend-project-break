@@ -27,6 +27,9 @@ Este proyecto es una aplicación web simple para gestionar productos de una tien
 
 Estas se renderizan como `<select>` en los formularios.
 
+## Subida de imagenes
+npm install multer cloudinary multer-storage-cloudinary
+
 ## Testing
 
 Las rutas están testeadas usando **Jest** y **Supertest**. Se usan mocks para simular la lógica de base de datos con Mongoose.
