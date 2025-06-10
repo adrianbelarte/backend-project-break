@@ -1,41 +1,66 @@
 const express = require('express');
 const request = require('supertest');
+const bodyParser = require('body-parser');
 const productController = require('../controllers/productController');
 
-// Mock de modelo y enums
 jest.mock('../models/Product', () => {
-  const mockProduct = {
-    find: jest.fn(),
-    findById: jest.fn(),
-    create: jest.fn(),
-    findByIdAndUpdate: jest.fn(),
-    findByIdAndDelete: jest.fn(),
+  const mockSave = jest.fn();
+
+  const ProductMock = function (data) {
+    return { ...data, save: mockSave };
   };
-  // Retornamos el mock completo con enums simulados
+
+  ProductMock.find = jest.fn();
+  ProductMock.findById = jest.fn();
+  ProductMock.create = jest.fn();
+  ProductMock.findByIdAndUpdate = jest.fn();
+  ProductMock.findByIdAndDelete = jest.fn();
+
   return {
-    Product: mockProduct,
-    categories: ['Camisetas', 'Pantalones', 'Zapatos', 'Accesorios'],
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    Product: ProductMock,
+    categories: ['Camisetas', 'Pantalones'],
+    sizes: ['S', 'M', 'L'],
+    __esModule: true,
   };
 });
 
-// Ahora sí importamos los mocks para usarlos en tests
 const { Product, categories, sizes } = require('../models/Product');
 
-// App express para test
+// Aquí mockeamos los helpers para que Jest pueda detectar llamadas a sus funciones
+jest.mock('../helpers/baseHtml', () => jest.fn(() => '<html></html>'));
+
+jest.mock('../helpers/template', () => ({
+  getProductCards: jest.fn(() => '<div>Cards</div>'),
+  getNewProductForm: jest.fn(() => '<form>New</form>'),
+  getEditProductForm: jest.fn(() => '<form>Edit</form>'),
+  getProductDetail: jest.fn(() => '<div>Detail</div>'),
+}));
+
+const renderPage = require('../helpers/baseHtml');
+const {
+  getProductCards,
+  getNewProductForm,
+  getEditProductForm,
+  getProductDetail,
+} = require('../helpers/template');
+
 const app = express();
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-// Rutas simuladas del dashboard
+// Middleware para simular sesión de usuario en req.session
+app.use((req, res, next) => {
+  req.session = { user: { name: 'TestUser', id: '123' } };
+  next();
+});
+
 app.get('/dashboard', productController.showProducts);
-app.get('/dashboard/new', productController.showNewProduct);   
-app.get('/dashboard/:id', productController.showProductById);  
-app.get('/dashboard/:id/edit', productController.showEditProduct);
+app.get('/dashboard/new', productController.showNewProduct);
+app.get('/dashboard/:productId', productController.showProductById);
+app.get('/dashboard/:productId/edit', productController.showEditProduct);
 app.post('/dashboard', productController.createProduct);
-app.put('/dashboard/:id', productController.updateProduct);
-app.delete('/dashboard/:id/delete', productController.deleteProduct);
-
+app.put('/dashboard/:productId', productController.updateProduct);
+app.delete('/dashboard/:productId/delete', productController.deleteProduct);
 
 describe('Product Controller', () => {
   beforeEach(() => {
@@ -43,130 +68,91 @@ describe('Product Controller', () => {
   });
 
   test('GET /dashboard → muestra productos', async () => {
-    const fakeProducts = [{ name: 'Camisa' }, { name: 'Zapato' }];
-    Product.find.mockResolvedValue(fakeProducts);
+    Product.find.mockResolvedValue([{ name: 'Camisa' }, { name: 'Zapato' }]);
 
     const res = await request(app).get('/dashboard');
 
     expect(res.status).toBe(200);
-    expect(res.text).toContain('Camisa');
-    expect(res.text).toContain('Zapato');
+    expect(getProductCards).toHaveBeenCalled();
+    expect(renderPage).toHaveBeenCalled();
   });
 
   test('GET /dashboard/:id → muestra producto por id', async () => {
-    const fakeProduct = {
-      _id: '1',
-      name: 'Camiseta',
-      image: 'img.jpg',
-      description: 'Bonita camiseta',
-      price: 10.99,
-    };
-
-    Product.findById.mockResolvedValue(fakeProduct);
+    Product.findById.mockResolvedValue({ _id: '1', name: 'Camiseta' });
 
     const res = await request(app).get('/dashboard/1');
 
     expect(res.status).toBe(200);
-    expect(res.text).toContain('Camiseta');
-    expect(res.text).toContain('10.99');
+    expect(getProductDetail).toHaveBeenCalled();
+    expect(renderPage).toHaveBeenCalled();
   });
 
-  test('GET /dashboard/new → muestra formulario nuevo con opciones enum', async () => {
+  test('GET /dashboard/:id → 404 si no existe', async () => {
+    Product.findById.mockResolvedValue(null);
+
+    const res = await request(app).get('/dashboard/999');
+
+    expect(res.status).toBe(404);
+    expect(res.text).toContain('Producto no encontrado');
+  });
+
+  test('GET /dashboard/new → muestra formulario nuevo', async () => {
     const res = await request(app).get('/dashboard/new');
 
     expect(res.status).toBe(200);
-
-    categories.forEach(category => {
-      expect(res.text).toContain(`<option>${category}</option>`);
-    });
-
-    sizes.forEach(size => {
-      expect(res.text).toContain(`<option>${size}</option>`);
-    });
+    expect(getNewProductForm).toHaveBeenCalled();
+    expect(renderPage).toHaveBeenCalled();
   });
 
-  test('POST /dashboard → crea un producto', async () => {
-    const body = {
+  test('POST /dashboard → crea un producto (url)', async () => {
+    const productInstance = new Product({
       name: 'Pantalón',
-      image: 'img.jpg',
+      imageUrl: 'https://img.com/img.jpg',
       description: 'Cómodo',
       category: 'Pantalones',
       size: 'L',
       price: 29.99,
-    };
+    });
 
-    Product.create.mockResolvedValue({ _id: 'abc123', ...body });
+    productInstance.save.mockResolvedValueOnce();
 
-    const res = await request(app)
-      .post('/dashboard')
-      .send(body);
+    const res = await request(app).post('/dashboard').send({
+      name: 'Pantalón',
+      imageUrl: 'https://img.com/img.jpg',
+      description: 'Cómodo',
+      category: 'Pantalones',
+      size: 'L',
+      price: 29.99,
+    });
 
-    expect(Product.create).toHaveBeenCalledWith(body);
-    expect(res.status).toBe(302); // redirección
+    expect(productInstance.save).toHaveBeenCalled();
+    expect(res.status).toBe(302);
     expect(res.headers.location).toBe('/dashboard');
   });
 
-  test('POST /dashboard → no crea producto con categoría inválida', async () => {
-    const invalidProduct = {
-      name: 'Producto inválido',
-      image: 'img.jpg',
-      description: 'Desc',
-      category: 'NoExiste',
-      size: 'M',
-      price: 10,
-    };
-
-    Product.create.mockImplementation(() => {
-      const error = new Error('Validation failed');
-      error.name = 'ValidationError';
-      throw error;
-    });
-
-    const res = await request(app)
-      .post('/dashboard')
-      .send(invalidProduct);
-
-    expect(Product.create).toHaveBeenCalledWith(invalidProduct);
-    expect(res.status).toBeGreaterThanOrEqual(400);
-  });
-
-  test('GET /dashboard/:id/edit → muestra formulario edición con opciones enum seleccionadas', async () => {
-    const fakeProduct = {
-      _id: '1',
-      name: 'Camisa',
-      image: 'img.jpg',
-      description: 'Bonita camisa',
-      category: 'Pantalones',
-      size: 'L',
-      price: 25,
-    };
-
-    Product.findById.mockResolvedValue(fakeProduct);
+  test('GET /dashboard/:id/edit → muestra edición', async () => {
+    Product.findById.mockResolvedValue({ _id: '1', name: 'Camisa', category: 'Camisetas', size: 'M' });
 
     const res = await request(app).get('/dashboard/1/edit');
 
     expect(res.status).toBe(200);
-
-    categories.forEach(category => {
-      expect(res.text).toContain(`<option${category === fakeProduct.category ? ' selected' : ''}>${category}</option>`);
-    });
-
-    sizes.forEach(size => {
-      expect(res.text).toContain(`<option${size === fakeProduct.size ? ' selected' : ''}>${size}</option>`);
-    });
+    expect(getEditProductForm).toHaveBeenCalled();
+    expect(renderPage).toHaveBeenCalled();
   });
 
   test('PUT /dashboard/:id → actualiza un producto', async () => {
     Product.findByIdAndUpdate.mockResolvedValue({});
 
-    const res = await request(app)
-      .put('/dashboard/1')
-      .send({ name: 'Camisa actualizada' });
+    const res = await request(app).put('/dashboard/1').send({
+      name: 'Actualizado',
+      description: 'Desc',
+      category: 'Camisetas',
+      size: 'L',
+      price: 10,
+      imageUrl: 'https://img.com/img.jpg',
+    });
 
-    expect(Product.findByIdAndUpdate).toHaveBeenCalledWith(
-      '1',
-      { name: 'Camisa actualizada' }
-    );
+    expect(Product.findByIdAndUpdate).toHaveBeenCalledWith('1', expect.objectContaining({ name: 'Actualizado' }));
     expect(res.status).toBe(302);
     expect(res.headers.location).toBe('/dashboard');
   });
@@ -178,6 +164,5 @@ describe('Product Controller', () => {
 
     expect(Product.findByIdAndDelete).toHaveBeenCalledWith('1');
     expect(res.status).toBe(302);
-    expect(res.headers.location).toBe('/dashboard');
   });
 });

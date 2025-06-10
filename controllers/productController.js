@@ -86,8 +86,6 @@ exports.showEditProduct = async (req, res) => {
   }
 };
 
-
-
 exports.updateProduct = async (req, res) => {
   try {
     const productId = req.params.productId;
