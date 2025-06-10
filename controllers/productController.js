@@ -78,7 +78,7 @@ exports.showEditProduct = async (req, res) => {
     const product = await Product.findById(req.params.productId);
     if (!product) return res.status(404).send('Producto no encontrado');
 
-    const content = getEditProductForm(product);
+    const content = getEditProductForm(product, categories, sizes); // ← AQUÍ el cambio
     res.send(renderPage(content, req));
   } catch (error) {
     console.error('Error al mostrar formulario de edición:', error);
@@ -87,20 +87,21 @@ exports.showEditProduct = async (req, res) => {
 };
 
 
-exports.updateProduct = async (req, res) => {
-  console.log("Entrando en updateProduct");
-  console.log("req.method:", req.method);
-  console.log("req.params.productId:", req.params.productId);
-  console.log("req.body:", req.body);
 
+exports.updateProduct = async (req, res) => {
   try {
     const productId = req.params.productId;
-    let imageUrl = req.body.existingImage; // imagen por defecto
+    let imageUrl = req.body.existingImage; // imagen por defecto (la actual)
 
     if (req.file) {
+      // Si suben archivo, subimos a Cloudinary y usamos esa imagen
       const result = await cloudinary.uploader.upload(req.file.path);
       imageUrl = result.secure_url;
+    } else if (req.body.imageUrl && req.body.imageUrl.trim() !== '') {
+      // Si ponen URL, la usamos
+      imageUrl = req.body.imageUrl.trim();
     }
+    // Sino mantenemos existingImage
 
     const updatedData = {
       name: req.body.name,
@@ -119,3 +120,4 @@ exports.updateProduct = async (req, res) => {
     res.status(500).send('Error actualizando producto');
   }
 };
+
