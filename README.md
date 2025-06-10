@@ -38,3 +38,5 @@ Para correr los tests:
 
 ```bash
 npm test
+npm install cors
+npm install swagger-ui-express swagger-jsdoc
