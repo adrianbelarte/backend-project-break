@@ -51,6 +51,7 @@ Para subir imágenes y almacenarlas en la nube, se utilizan:
 - **multer**: para manejar la subida de archivos (multipart/form-data).  
 - **cloudinary**: servicio para almacenamiento y gestión de imágenes.  
 - **multer-storage-cloudinary**: adaptador que conecta Multer con Cloudinary.
+ `no conseguido...`
 
 ---
 

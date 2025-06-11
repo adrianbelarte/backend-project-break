@@ -5,18 +5,17 @@ const baseHtml = `
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Mi Tienda de Moda</title>
+  <title>Tienda Anime</title>
   <style>
-    /* Reset */
     * {
       box-sizing: border-box;
     }
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f6f8;
+      background: #0f0f0f;
       margin: 0; padding: 0;
-      color: #333;
+      color: #e0e0e0;
       line-height: 1.6;
     }
 
@@ -24,48 +23,49 @@ const baseHtml = `
       max-width: 1100px;
       margin: 30px auto;
       padding: 20px;
-      background: white;
+      background: #1a1a1a;
       border-radius: 10px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 20px rgba(255,255,255,0.05);
     }
 
     h1 {
       font-weight: 700;
-      color: #222;
+      color: #ffcc00;
       margin-bottom: 20px;
       font-size: 2.2rem;
       text-align: center;
     }
 
-    /* Links */
     a {
-      color: #2874f0;
+      color: #00b4ff;
       text-decoration: none;
       transition: color 0.3s ease;
     }
     a:hover {
-      color: #165dc8;
+      color: #0090cc;
       text-decoration: underline;
     }
 
-    /* Inputs & Buttons */
     input, select, button, textarea {
       font-family: inherit;
       font-size: 1rem;
       padding: 12px 15px;
       margin: 8px 0;
       border-radius: 8px;
-      border: 1px solid #ccc;
+      border: 1px solid #444;
+      background: #222;
+      color: #eee;
       width: 100%;
       transition: border-color 0.3s ease;
     }
     input:focus, select:focus, textarea:focus {
       outline: none;
-      border-color: #2874f0;
-      box-shadow: 0 0 5px rgba(40, 116, 240, 0.5);
+      border-color: #00b4ff;
+      box-shadow: 0 0 5px rgba(0, 180, 255, 0.5);
     }
+
     button {
-      background-color: #2874f0;
+      background-color: #e50914;
       color: white;
       border: none;
       font-weight: 700;
@@ -77,7 +77,7 @@ const baseHtml = `
       transition: background-color 0.3s ease;
     }
     button:hover {
-      background-color: #165dc8;
+      background-color: #b0060f;
     }
 
     form {
@@ -85,11 +85,10 @@ const baseHtml = `
       margin: 0 auto;
     }
 
-    /* Navbar */
     nav {
-      background: white;
+      background: #1a1a1a;
       padding: 1rem 2rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      box-shadow: 0 2px 8px rgba(255,255,255,0.05);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -101,7 +100,7 @@ const baseHtml = `
     nav .logo {
       font-weight: 900;
       font-size: 1.5rem;
-      color: #2874f0;
+      color: #ffcc00;
       user-select: none;
       text-decoration: none;
     }
@@ -117,15 +116,15 @@ const baseHtml = `
     nav .categories a {
       padding: 8px 16px;
       border-radius: 30px;
-      background-color: #e0e7ff;
-      color: #2874f0;
+      background-color: #1e1e2f;
+      color: #00b4ff;
       font-weight: 600;
       transition: background-color 0.3s ease, color 0.3s ease;
     }
     nav .categories a.active,
     nav .categories a:hover {
-      background-color: #2874f0;
-      color: white;
+      background-color: #00b4ff;
+      color: #0f0f0f;
     }
 
     nav .actions {
@@ -138,7 +137,7 @@ const baseHtml = `
 
     nav .actions span.user {
       font-weight: 600;
-      color: #555;
+      color: #ccc;
       user-select: none;
     }
 
@@ -153,22 +152,23 @@ const baseHtml = `
       display: inline-block;
       transition: background-color 0.3s ease;
     }
+
     nav .actions a.login {
-      background-color: #2874f0;
-      color: white;
+      background-color: #00b4ff;
+      color: #0f0f0f;
     }
     nav .actions a.login:hover {
-      background-color: #165dc8;
+      background-color: #0090cc;
     }
+
     nav .actions form button.logout {
-      background-color: #dc3545;
+      background-color: #e50914;
       color: white;
     }
     nav .actions form button.logout:hover {
-      background-color: #a71d2a;
+      background-color: #b0060f;
     }
 
-    /* Product Cards */
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
@@ -177,9 +177,9 @@ const baseHtml = `
     }
 
     .product-card {
-      background: #fff;
+      background: #222;
       border-radius: 12px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 15px rgba(255,255,255,0.05);
       padding: 15px;
       display: flex;
       flex-direction: column;
@@ -189,7 +189,7 @@ const baseHtml = `
     }
     .product-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 20px rgba(255,255,255,0.08);
     }
 
     .product-card img {
@@ -202,18 +202,20 @@ const baseHtml = `
     .product-card h2 {
       font-size: 1.2rem;
       margin: 8px 0;
-      color: #222;
+      color: #ffcc00;
     }
+
     .product-card p.description {
       font-size: 0.9rem;
-      color: #555;
+      color: #aaa;
       height: 40px;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     .product-card p.price {
       font-weight: 700;
-      color: #2874f0;
+      color: #00b4ff;
       margin: 10px 0;
       font-size: 1.1rem;
     }
@@ -225,16 +227,16 @@ const baseHtml = `
       font-weight: 700;
       border: none;
       cursor: pointer;
-      background-color: #2874f0;
+      background-color: #e50914;
       color: white;
       text-decoration: none;
       transition: background-color 0.3s ease;
     }
+
     .product-card a:hover, .product-card button:hover {
-      background-color: #165dc8;
+      background-color: #b0060f;
     }
 
-    /* Responsive */
     @media (max-width: 600px) {
       nav {
         flex-direction: column;
@@ -259,7 +261,6 @@ const baseHtml = `
   </style>
 </head>
 <body>
-
 `;
 
 const baseFooter = `
@@ -267,11 +268,6 @@ const baseFooter = `
 </html>
 `;
 
-/**
- * @param {string} content HTML del contenido principal (dentro de <main>)
- * @param {object} req Objeto request para obtener sesión y URL
- * @returns HTML completo renderizado con navbar y estructura completa
- */
 function renderPage(content, req) {
   const isDashboard = req.originalUrl.startsWith('/dashboard');
   return baseHtml + getNavBar(isDashboard, req.session.user) + `<main>` + content + `</main>` + baseFooter;
